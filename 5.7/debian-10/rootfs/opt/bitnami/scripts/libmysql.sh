@@ -376,6 +376,59 @@ mysql_custom_init_scripts() {
 }
 
 ########################
+# Run custom start scripts
+# Globals:
+#   DB_*
+# Arguments:
+#   None
+# Returns:
+#   None
+#########################
+mysql_custom_init_scripts() {
+    if [[ -n $(find /docker-entrypoint-startdb.d/ -type f -regex ".*\.\(sh\|sql\|sql.gz\)") ]] ; then
+        info "Loading user's custom files from /docker-entrypoint-startdb.d";
+        for f in /docker-entrypoint-startdb.d/*; do
+            debug "Executing $f"
+            case "$f" in
+                *.sh)
+                    if [[ -x "$f" ]]; then
+                        if ! "$f"; then
+                            error "Failed executing $f"
+                            return 1
+                        fi
+                    else
+                        warn "Sourcing $f as it is not executable by the current user, any error may cause initialization to fail"
+                        . "$f"
+                    fi
+                    ;;
+                *.sql)
+                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL startdb is not supported on slave nodes, ignoring $f" && continue
+                    wait_for_mysql_access "$DB_ROOT_USER"
+                    # Temporarily disabling autocommit to increase performance when importing huge files
+                    if ! mysql_execute_print_output "$DB_DATABASE" "$DB_ROOT_USER" "$DB_ROOT_PASSWORD" <<< "SET autocommit=0; source ${f}; COMMIT;"; then
+                        error "Failed executing $f"
+                        return 1
+                    fi
+                    ;;
+                *.sql.gz)
+                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL startdb is not supported on slave nodes, ignoring $f" && continue
+                    wait_for_mysql_access "$DB_ROOT_USER"
+                    # In this case, it is best to pipe the uncompressed SQL commands directly to the 'mysql' command as extraction may cause problems
+                    # e.g. lack of disk space, permission issues...
+                    if ! gunzip -c "$f" | mysql_execute_print_output "$DB_DATABASE" "$DB_ROOT_USER" "$DB_ROOT_PASSWORD"; then
+                        error "Failed executing $f"
+                        return 1
+                    fi
+                    ;;
+                *)
+                    warn "Skipping $f, supported formats are: .sh .sql .sql.gz"
+                    ;;
+            esac
+        done
+    fi
+}
+
+########################
 # Starts MySQL/MariaDB in the background and waits until it's ready
 # Globals:
 #   DB_*

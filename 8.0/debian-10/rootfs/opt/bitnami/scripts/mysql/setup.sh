@@ -31,6 +31,8 @@ fi
 mysql_initialize
 # Allow running custom initialization scripts
 mysql_custom_init_scripts
+# Allow running custom start scripts
+mysql_custom_start_scripts
 # Stop MySQL before flagging it as fully initialized.
 # Relying only on the trap defined above could produce a race condition.
 mysql_stop
