@@ -21,7 +21,7 @@ RUN mkdir /docker-entrypoint-startdb.d
 COPY rootfs /
 RUN /opt/bitnami/scripts/mysql/postunpack.sh
 ENV BITNAMI_APP_NAME="mysql" \
-    BITNAMI_IMAGE_VERSION="8.0.28-debian-10-r36" \
+    BITNAMI_IMAGE_VERSION="8.0.28-debian-10-r37" \
     PATH="/opt/bitnami/common/bin:/opt/bitnami/mysql/bin:/opt/bitnami/mysql/sbin:$PATH"
 
 EXPOSE 3306
