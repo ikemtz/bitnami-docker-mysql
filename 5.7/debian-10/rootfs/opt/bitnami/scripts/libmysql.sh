@@ -384,7 +384,7 @@ mysql_custom_init_scripts() {
 # Returns:
 #   None
 #########################
-mysql_custom_init_scripts() {
+mysql_custom_start_scripts() {
     if [[ -n $(find /docker-entrypoint-startdb.d/ -type f -regex ".*\.\(sh\|sql\|sql.gz\)") ]] ; then
         info "Loading user's custom files from /docker-entrypoint-startdb.d";
         for f in /docker-entrypoint-startdb.d/*; do
