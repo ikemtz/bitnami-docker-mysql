@@ -331,9 +331,9 @@ EOF
 #   None
 #########################
 mysql_custom_scripts() {
-    if [[ -n $(find /docker-entrypoint-initdb.d/ -type f -regex ".*\.\(sh\|sql\|sql.gz\)") ]] && \
+    if [[ -n $(find /docker-entrypoint-$1db.d/ -type f -regex ".*\.\(sh\|sql\|sql.gz\)") ]] && \
     ([[ ! -f "$DB_DATA_DIR/.user_scripts_initialized" ]] || $1 == 'start'); then
-        info "Loading user's custom files from /docker-entrypoint-initdb.d";
+        info "Loading user's custom files from /docker-entrypoint-$1db.d";
         for f in /docker-entrypoint-$1db.d/*; do
             debug "Executing $f"
             case "$f" in
@@ -349,7 +349,7 @@ mysql_custom_scripts() {
                     fi
                     ;;
                 *.sql)
-                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL initdb is not supported on slave nodes, ignoring $f" && continue
+                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL $1db is not supported on slave nodes, ignoring $f" && continue
                     wait_for_mysql_access "$DB_ROOT_USER"
                     # Temporarily disabling autocommit to increase performance when importing huge files
                     if ! mysql_execute_print_output "$DB_DATABASE" "$DB_ROOT_USER" "$DB_ROOT_PASSWORD" <<< "SET autocommit=0; source ${f}; COMMIT;"; then
@@ -358,7 +358,7 @@ mysql_custom_scripts() {
                     fi
                     ;;
                 *.sql.gz)
-                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL initdb is not supported on slave nodes, ignoring $f" && continue
+                    [[ "$DB_REPLICATION_MODE" = "slave" ]] && warn "Custom SQL $1db is not supported on slave nodes, ignoring $f" && continue
                     wait_for_mysql_access "$DB_ROOT_USER"
                     # In this case, it is best to pipe the uncompressed SQL commands directly to the 'mysql' command as extraction may cause problems
                     # e.g. lack of disk space, permission issues...
