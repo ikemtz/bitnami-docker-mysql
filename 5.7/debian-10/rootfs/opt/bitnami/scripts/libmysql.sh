@@ -326,7 +326,7 @@ EOF
 # Run custom scripts
 # Globals:
 #   DB_*
-# Arguments: 
+# Arguments:
 #   $1 - 'init' or 'start' ('init' runs on first container start, 'start' runs everytime the container starts)
 # Returns:
 #   None
